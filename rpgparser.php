@@ -8,7 +8,7 @@ include "db_config.php";
 //$DBL = mysqli_connect("alix", "i2d", "Dei5iapu", "i2d") or die("Could not connect for rpgchat");
 //echo "DBL="; print_r($DBL);
 
-function rpgParse($playerId,$jsonMsg) {
+function rpgParse($playerId,$jsonMsg) { // this is the main function HERE
   global $Players;
   
   echo "rpg parse: playerId=$playerId\n";  
@@ -34,17 +34,26 @@ function rpgParse($playerId,$jsonMsg) {
 //  if($jsonMsg->message=="lavirra9") {
     //arrival message, don't even print this
 //  } else
-  if($jsonMsg->message=='player-pos') {
-    updatePlayerPos($jsonMsg);
-  } else
   //can I put the gm map change here?
-  if($jsonMsg->message=="gm-change-map") {
+  /* if($jsonMsg->message=="gm-change-map") { //map has been scoped-out in favor of roll20
     //message attempting to change map
     echo "Attempting to change map\n";
     if($jsonMsg->name!=$jsonMsg->game)
       echo "ERROR: only GM can change map\n";
     else
       adjustMapParameters($jsonMsg,$gameId);
+  } else */
+  if( isImageLink($jsonMsg->message) ) {
+      $jsonImageMessage = mask(json_encode(array('type'=>'imagemsg', 'name'=>$jsonMsg->name, 'message'=>$jsonMsg->message )));
+      message_to_scene($sceneId,$gameId,$jsonMsg,'imagemsg');
+  } else
+  if( (substr($jsonMsg->message,0,1)=="+" || substr($jsonMsg->message,0,1)=="-") && isGm($gameId,$jsonMsg->name)) { //might be a score change
+    echo "+1 functionality possibly\n";
+    $result = addToScore($jsonMsg);
+    if($result!==FALSE) {      
+      echo "result="; print_r($result);
+      message_to_scene($sceneId,$gameId,$result);
+    }
   } else
   if(substr(trim($jsonMsg->message),-1)=="=") { //only GM?
     echo "calculator\n";
@@ -85,10 +94,10 @@ function rpgParse($playerId,$jsonMsg) {
 	//return mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
 }//F
 
-function message_to_scene($id,$gameId,$jsonMsg) {
+function message_to_scene($id,$gameId,$jsonMsg,$type = 'usermsg') {
   global $Players;
   
-  $msg = mask(json_encode(array('type'=>'usermsg', 'name'=>$jsonMsg->name, 'message'=>$jsonMsg->message, 'color'=>$jsonMsg->color)));
+  $msg = mask(json_encode(array('type'=>$type, 'name'=>$jsonMsg->name, 'message'=>$jsonMsg->message, 'color'=>$jsonMsg->color))); //why have we done it this way?
   $sceneNotify = mask(json_encode(array('type'=>'sceneupdate', 'sn'=>$id))); 
   foreach($Players as $p) {
     $socket = $p->socket;
@@ -285,26 +294,25 @@ function getLevel($chrName,$ability) {
   global $DBL;
   global $CHARACTERS;
   
+  //echo "DEBUG: getlevel chrName=$chrName ability=$ability\n";
+
   if( isset($CHARACTERS[$chrName])) {
     $c = $CHARACTERS[$chrName];
-    if(isset($c->levels[$ability])) 
+    //echo "character:"; print_r($c);
+    if(isset($c->levels[$ability])) {
+      //echo "found it ".$c->levels[$ability];
       return $c->levels[$ability];
-    else {
+    } else {
       //we must retrieve it from the database and store it here
-      $query = 
-"SELECT statName,statValue FROM 
-dice_stats ds 
-LEFT JOIN dice_characters dc ON (dc.id = ds.char_id) 
-WHERE dc.name = '$chrName'
-AND ds.statName = '$ability'";
-      $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
-      $row = mysqli_fetch_object($result);
+      //echo "find in dB\n";
+      $CHARACTERS[ $chrName ]->levels[ $ability ] = getStatValueFromDB($chrName,$ability);
       
-      $CHARACTERS[ $chrName ]->levels[ $ability ] = $row->statValue;
-      
+      //echo "found $row->statValue\n";
+
       return $row->statValue;
     }//if found
-  }//if chr set - what if not found?
+  } else
+    echo "ERROR getLevel: $chrName not found\n";
 
 }//F 
 
@@ -458,73 +466,86 @@ LIMIT 1";
 
   //we need to notify all players to update their maps...
   $game = $GAMES[ $gameId ];
-  //oops we forgot to update the game object in server memory
-  //$game->map_x = $newX;
-  //$game->map_y = $newY;
-  //$game->map_scale = $newScale;
-
-  //sendMapUpdate($game,$socket);
-
-  //$msg = mapUpdate($game);
-  //e//cho "DEBUG map update "; print_r($msg); echo "\n";
-  //@socket_write($socket,$msg,strlen($msg));
-}//F
-
-function sendMapUpdateToPlayer($game,$socket) {
-  //I want you to re-read the game info from dB (refresh)
-  //store to game object in local memory
-  //then transmit to the game client(s)
-  global $DBL;
-  global $GAMES;
-
-  $query =
-"SELECT map_x,map_y,map_scale,map_image
-FROM i2d.dice_games
-WHERE id=$game->id";
-  $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
-  $row = mysqli_fetch_object($result);
-  
-  $GAMES[ $game->id ]->map_x = $row->map_x;
-  $GAMES[ $game->id ]->map_y = $row->map_y;
-  $GAMES[ $game->id ]->map_scale = $row->map_scale;
-  $GAMES[ $game->id ]->map_image = $row->map_image;
-  $game = $GAMES[ $game->id ];
-
-  $msg = mask(json_encode(array('type'=>'mapdate', 'url'=>$game->map_image, 'x'=>$game->map_x, 'y'=>$game->map_y, 'scale'=>$game->map_scale)));
-  
+  $msg = mapUpdate($game);
   echo "DEBUG map update "; print_r($msg); echo "\n";
-  echo "DEBUG socket="; print_r($socket); echo "\n";
-
   @socket_write($socket,$msg,strlen($msg));
 }//F
 
-function updatePlayerPos($msg) {
+function isGm($gameId,$user) {
+  global $GAMES;
+
+  return $user == $GAMES[$gameId]->gm;
+}//F
+
+function addToScore($msg) {
   global $DBL;
 
-  echo "updating player positions\n";
-  /* msg 
-  (
-    [message] => player-pos
-    [player] => PEQ
-    [game] => WOWF
-    [name] => WOWF
-    [new_x] => 1430
-    [new_y] => 975.5
-  ) */
-  $player = $msg->player;
-  $mapX = $msg->new_x;
-  $mapY = $msg->new_y;  
-
-  $query =
-  "UPDATE i2d.dice_characters
-  SET map_x = $mapX,
-  map_y = $mapY
-  WHERE name = '$player'
-  LIMIT 1";
-
+  //deciphers [ +1xp Alaric ] etc.
+  $split_score = explode(" ",trim($msg->message));
+  if(count($split_score)!=2) return FALSE; //return "" if wrong
+  $operand = substr($split_score[0],0,1); //the "+"
+  echo "operand $operand\n";
+  if($operand!="+" && $operand!="-") return FALSE;
+  $amount_and_score_name = substr($split_score[0],1);  //the rest of the score
+  echo "amount and score name $amount_and_score_name\n";
+  for($i=0;$i<strlen($amount_and_score_name);$i++) {
+    $k = substr($amount_and_score_name,$i,1);
+    if($k>='0' && $k<='9') { //ok to continue
+    } else break;
+  }//for
+  echo "i=$i\n";
+  if($i==0) return FALSE;  //no number found
+  $amount = substr($amount_and_score_name,0,$i);
+  $score_name = strtoupper(substr($amount_and_score_name,$i));
+  if(strlen($score_name)<=1) return FALSE;
+  echo "amount=$amount score_name=$score_name\n";
+  $target_player = trim($split_score[1]); //the target player
+  echo "target_player=$target_player\n";
+  if(strlen($target_player)<3) return FALSE;
+  $query = 
+"UPDATE dice_stats 
+SET statValue = statValue $operand $amount 
+WHERE char_id = ( 
+  SELECT id 
+  FROM dice_characters
+  WHERE name = '$target_player' 
+) AND statName = '$score_name'
+LIMIT 1";
   $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
+  echo "addToScore query=$query\n";
 
-  echo "DEBUG player=$player mapX=$mapX mapY=$mapY query=$query\n";
+  //$newValue = getStatValue($score_name,$target_player,$msg->playerId);
+  $l = getStatValueFromDB($target_player,$score_name);
+  
+  $msg->message = "$operand$amount$score_name for $target_player ($l)";
+  $msg->color = '#FFFFFF';
+  $msg->user_name = 'SCORE';
+
+  return $msg;
+}//F
+
+function getStatValueFromDB($chrName,$ability){
+  global $DBL;
+
+  $query = 
+"SELECT statName,statValue FROM 
+dice_stats ds 
+LEFT JOIN dice_characters dc ON (dc.id = ds.char_id) 
+WHERE dc.name = '$chrName'
+AND ds.statName = '$ability'";
+  $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
+  $row = mysqli_fetch_object($result);
+
+  return $row->statValue;
+}//F
+
+function isImageLink($msg) {
+  //if( ($imageMessage = isImageLink($json->message)) != "" ) {
+  if(strpos($msg,"http")===FALSE && strpos($msg,"https")===FALSE) return false;
+  if(strpos($msg,".png")===FALSE && strpos($msg,".jpg")===FALSE && strpos($msg,".gif")===FALSE) return false;
+  //confirmed this is an image link
+
+  return true;
 }//F
 
 ?>

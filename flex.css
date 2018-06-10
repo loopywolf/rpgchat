@@ -1,0 +1,56 @@
+body {
+	background-color: darkgrey;
+}
+.top-line {
+	background-color: green;
+	height:4%;
+}
+.main-line {
+	background-color: red;
+	height:96%;
+	display: flex;
+	align-items: flex-start;
+}
+.chat-box {
+	background:blue;
+	flex-grow:12;
+	height:100%;
+	display:flex;
+	flex-direction: column
+
+}
+.right-menu {
+	background:blue;
+	/* flex-grow:200px; experimental */
+	height:100%;
+	border:2px solid white;
+    border-radius: 6px;
+    flex:0 1 auto;
+}
+.message-area {
+	background-color: yellow;	
+	flex-grow: 20;	
+}
+.message-line {
+	background-color: purple;
+	flex-grow:1;
+}
+/* older stuff */
+.button {
+  background-color: #ada6b7;
+  border: 1px solid black;
+  color: #2d2a2a;
+  text-decoration: none;
+  display: inline;
+  font-size: 18px;
+  cursor: pointer;
+  height: 28px;
+  margin-top: 5px;
+  font-family: 'Exo 2', sans-serif;
+  font-weight:bold;
+  border-radius: 5px;
+  width: 98px;
+}
+.button:hover {
+  background:white;
+}

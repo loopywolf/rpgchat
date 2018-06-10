@@ -258,7 +258,9 @@ body2 {
   background:lightblue;
 }
 .tr {
-  height:100%;
+}
+#bottom-row {
+  min-height:100px;
 }
 #main-map {
   margin: auto;
@@ -316,25 +318,32 @@ body2 {
   font-weight: bold;
   margin-bottom: 8px;
 }
-.map-button {
-  border: 2px solid white;
-  border-radius: 40px;
-  background: lightcoral;
-  font-family: arial;
-  font-size: 16px;
-  padding: 3px 9px;
-  text-decoration: none;
-  color: black;
+.small-caps {
+    font-variant: small-caps;
 }
-.player-tag {
-  background: white;
-  color: black;
-  font-family: sans-serif;
-  font-size: 29px;
-  border: 4px solid black;
-  border-radius: 1px;
-  position: absolute;
-  top: 87px;
-  padding: 0px 7px;
-  left: 50px;
+.system-down {
+  border: 2px dashed #fb8d1b;
+  margin-left: 100px;
+  margin-top: 100px;
+  width: 50%;
+  padding: 10px;
+  font-size: 24px;
+  border-radius: 14px;
+  background: #5d3300;
+  margin-bottom: 44px;
 }
+.image-in-chat {
+  max-height:40px;
+}
+/* .image-layout-table {
+  width:100%;
+}
+.cell-left {
+  text-align: left;
+}
+.cell-right {
+  text-align: right;
+}
+.image-layout-table tr {
+  vertical-align: top;
+} */

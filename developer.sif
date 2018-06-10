@@ -1,0 +1,77 @@
+<H1>LEFT TO DO</H1>
+BUGS
+- Does not scroll down
+- roll 5 STR vs 4 does not work
+IMPROVEMENTS
+- chr creation is very hard
+- Notification icon is imperative (favicon)
+- I can't enter notes! WTF
+Phase 1
+	DONE
+Phase 2
+- How about put back the 123 thing for GMs. . might be handy
+- solo feature
+-- Solo logs are not viewable by any but the player
+-- Solo logs do not show up in date lists
+-- Solo most - no scenes are accessible beyond your own
+-- Solo has separate password?
+- Map - upload lightshow URL and everybody gets update - MAP moved out!
+Phase 3 - I moved all mapping services OUT - going to try roll20 instead
+- Map ver 2
+-- GM can update scale and x,y
+-- Player icons appear
+-- GM can update file/image
+-- Map - with player tags - WIP
+- Fancy stuff!
+-- Popup when player makes a move
+-- Nice dice
+-- Combat animations
+-- Cool graphic when you speak ;)
+Feedback
+-- notes for players
+Suggestions
+- see flex.php for a great layout! Implement! - oh right, thanks.. was not.. needs help - maybe Remy? - asked
+
+<H1>BUGS</H1>
+- Getting a weird bug .. And I don't like it - I won't have any intermittent weird bugs .. Symptom:
+- Log contains blank line entries, shouldn't ever
+- Server stopped responding to a socket.. Mustn't ever
+
+<H1>DONE</H1>
+- GM ability to add xp
+- +1 functionality (xp, luck)
+- Enter new note
+- Alias
+- I'm
+- Scene notification button
+- View/search logs
+- Say, pose
+- Roll
+-- 5+3+6 vs AGL+10 - WIP
+- Roll
+-- 5 v 7
+-- AGL vs 7
+- Spoof
+- GM
+-- Login
+-- Notes - search
+-- Random picker
+- Map 
+-- Appers
+-- Scale,x,y,
+- Login
+- Announce message
+- Multiplayer scene work
+- Sheet
+- Make sure multiple games, multiple scenes will work
+- Log what you do in scene
+- Provide backlog when you log in
+- Calculator - 
+
+2018-05-21
+status:
+I am having trouble getting the screen layout that I want
+also, seems to be an issue with communication, but do the layout first
+looks like the communication works well with WOWF being in multiple scenes
+suggestion: add some kind of readout about which player you are
+all the buttons need to open new windows - DONE

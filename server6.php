@@ -216,11 +216,13 @@ function getPlayer($socket,$user) {
   $game = $GAMES[ $chr->gameId ];
   echo "gameId=$chr->gameId "; print_r($game);
   $welcome = "Welcome to $game->name<BR>$game->announce";
-  //DEBUG special reminder feature for client development
-  $game->announce .= "<BR>NEXT STEP: You are sending player positions to server.. need to update the database then re-send back to client";
   $msg = mask(json_encode(array('type'=>'usermsg', 'name'=>$user, 'message'=>$welcome, 'color'=>'#FFFFFF')));
   echo "DEBUG send welcome "; print_r($msg); echo "\n";
-  echo "DEBUG socket="; print_r($socket); echo "\n";
+  @socket_write($socket,$msg,strlen($msg));
+  
+  //you should also send map update
+  $msg = mapUpdate($game);
+  echo "DEBUG map update "; print_r($msg); echo "\n";
   @socket_write($socket,$msg,strlen($msg));
   
   $new_player->gameId = $chr->gameId; //why not
@@ -233,51 +235,25 @@ function getPlayer($socket,$user) {
   echo "Players "; print_r($Players);
   echo "player=$user stored at $index\n";
   
-  //you should also send map update
-  sendMapUpdateToPlayer($game,$socket);
-  //this sends a map update to this player only
-
   //this is a convenient place to update the players (next) //TODO
-  $msg = getPlayerList($game);
-  echo "DEBUG players list"; print_r($msg); echo "\n";
-  @socket_write($socket, $msg, strlen($msg));
   
   return $index;    
 }//F
 
-//NOTE: this is called when the player first logs on, to get a list of the current players and their locations on map
-//it can be sent again, when a player's location is updated
-function getPlayerList($game) {
-  global $DBL;
-
-  //get the list of players
-  $query = 
-"SELECT dc.name,dc.map_x,dc.map_y
-FROM i2d.dice_characters dc
-LEFT JOIN i2d.dice_games dg ON (dc.game_id = dg.id)
-LEFT JOIN i2d.dice_stats ds ON (ds.char_id = dc.id)
-WHERE dg.gameName = '$game->name'
-and ds.statName = 'XP'";
-
-  echo "DEBUG: playersList query=$query\n";
-
-  $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
-
-  while($row = mysqli_fetch_object($result)){
-  	if($row->map_x==0 && $row->map_y==0) { } // do nothing
-  	else {
-  		//$row->name = strtoupper($row->name);
-    	$player[] = "$row->name|$row->map_x|$row->map_y";
-  	}//else
-  }//while
-
-  $result = implode(",",$player);
-  //transmit it to the game client
-  //need to send it back in digestible format
-
-  $msg = mask(json_encode(array('type'=>'playerlist', 'list'=>$result)));
-
+function mapUpdate($game) {
+  if(trim($game->map_image)=="" ||
+    trim($game->map_x=="") ||
+    trim($game->map_y=="") ||
+    trim($game->map_scale=="")) {
+    echo "error: map parameters bad for game $game->name : image=$game->map_image x=$game->map_x y=$game->map_y scale=$game->map_scale\n";
+    return null;
+  }
+  $msg = mask(json_encode(array('type'=>'mapdate', 'url'=>$game->map_image, 'x'=>$game->map_x, 'y'=>$game->map_y, 'scale'=>$game->map_scale)));
+  
+  echo "sent map update\n";
+  
   return $msg;
+  //maybe update the players here?
 }//F
 
 ?>
