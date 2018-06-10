@@ -19,15 +19,15 @@ function rpgParse($playerId,$jsonMsg) { // this is the main function HERE
   $user_game = trim($tst_msg->game);  //game name
 	$user_color = trim($tst_msg->color); //color */
   
-  echo "DEBUG: rpgParse jsonMsg ";
+  echo "DEBUG:rpgParse jsonMsg ";
   print_r($jsonMsg);
 
   //we need to broadcast this message to everybody in your same scene
   $sceneId = $Players[ $playerId ]->sceneId;
-  echo "DEBUG: sceneId=$sceneId\n";    //DEBUG  
+  echo "DEBUG:sceneId=$sceneId\n";    //DEBUG  
   $gameId = $Players[ $playerId ]->gameId;
 
-  echo "parse:\n";
+  echo "parse:-------------------------------------------------------------\n";
 
   //MAIN CONTROLS  
   //$response_text = mask(json_encode(array('type'=>'usermsg', 'name'=>$user_name, 'message'=>$user_message, 'color'=>$user_color)));
@@ -64,7 +64,7 @@ function rpgParse($playerId,$jsonMsg) { // this is the main function HERE
     echo "done calc\n";
   } else
   if(substr(trim($jsonMsg->message),0,5)=="roll ") {
-    //echo "DEBUG: dicehandler call\n";
+    //echo "DEBUG:dicehandler call\n";
     diceHandler($jsonMsg,$sceneId,$gameId,$Players[$playerId]);  //we will add params as needed
   } else
   if($jsonMsg->message=="scenechange") {
@@ -160,7 +160,7 @@ function logScene($gameId,$sceneId,$line) {
 
   $fe = getPersistentLogDescriptor($gameId,$sceneId);       
   fwrite($fe,$line."\n");
-  echo "DEBUG: logging to file $gameId.$sceneId - $line\n";
+  echo "DEBUG:logging to file $gameId.$sceneId - $line\n";
   
   $LOG_COUNTER++;
   if($LOG_COUNTER>$LOG_LIMIT) {
@@ -185,7 +185,7 @@ function getPersistentLogDescriptor($gameId,$sceneId) {
   $filename = "logs/$gameName-$date-$sceneId.log";     
   $fe = fopen($filename,"a");
   $LOG_FILES[$gameId][$sceneId] = $fe; //done
-  echo "DEBUG: created new log file @ $filename\n";
+  echo "DEBUG:created new log file @ $filename\n";
   
   return $fe;
 }//F
@@ -199,7 +199,7 @@ function readBackSceneToPlayer($sn,$player) {
   //$player = $PLAYERS[$playerId];
   //$gameId = $player->gameId;
   $game = $player->game;
-  echo "DEBUG: sn=$sn player="; print_r($player);  
+  echo "DEBUG:sn=$sn player="; print_r($player);  
   
   $dateTime = new DateTime("now",new DateTimeZone('America/New_York'));
   $date = $dateTime->format("Ymd");
@@ -209,7 +209,7 @@ function readBackSceneToPlayer($sn,$player) {
   $fd = fopen($filename,"r");
   if($fd===false) { 
     //if there is no file by that name, there is nothing to send back
-    echo "DEBUG: nothing to send back on $filename\n";
+    echo "DEBUG:nothing to send back on $filename\n";
     return;
   }//if 
   $current = 0;
@@ -225,7 +225,7 @@ function readBackSceneToPlayer($sn,$player) {
     if(!isset($line[ ($current+$i) % $SCENE_SIZE ])) continue;
     $l = $line[ ($current+$i) % $SCENE_SIZE ];
     if($l=="") continue;
-    echo "DEBUG: read back replay line=$l\n";   
+    echo "DEBUG:read back replay line=$l\n";   
     $bits = explode("|",$l);
     echo "DEBUG read back bits "; print_r($bits);
     $name = $bits[0];
@@ -243,58 +243,11 @@ function message_to_player($player,$msg) {
   @socket_write($player->socket,$msg,strlen($msg)); 
 }//F
 
-//diceHandler($jsonMsg);  //we will add params as needed
-/*function diceHandler2($msg,$sceneId,$gameId,$player) {
-  //we already know the first 5 chrs are "roll "
-  /* 		message: mymessage,
-    game : mygame,
-		name: myname,
-		color : 
-  $params = substr($msg->message,5); //clip off "roll "
-  $handled = false; 
-  
-  //echo "DEBUG: dicehandler params=$params\n"; 
-  
-  //simple case roll 3 v 7 or we also handle AGL vs 5
-  $bits = explode(" ",$params);
-  if(count($bits)==3 && ($bits[1]=="vs")||($bits[1]=="v")) {
-    $skill = trim($bits[0]);
-    $difficulty = trim($bits[2]);
-    $whatYouRolled = "$skill vs $difficulty";
-    //is skill a number, or a stat?
-    if(!is_numeric($skill)) {
-      //look it up as if it were a stat, if it does not resolve, nothing we can do
-      $stat = getLevel($msg->name,$skill);
-      if($stat=="") { //fail
-        $msg = mask(json_encode(array('type'=>'usermsg', 'name'=>$msg->name, 'message'=>"You have no level for $skill, please..", 'color'=>"gray" ))); //playr doesn't have color atm
-        message_to_player($player,$msg); //$line[ $current++ % $SCENE_SIZE ]);
-        return;
-      } else {  //we found stat and can proceed
-        $whatYouRolled = "$skill($stat) vs $difficulty";
-        $skill = $stat; //and proceed
-      }//if stat=="" 
-    }//if
-    $diceRoll = mt_rand(0,99);     
-    $r = round( ($diceRoll * ($skill + $difficulty))/100 - $difficulty , 0); //default supposedly , $PHP_ROUND_HALF_UP);
-    //echo "DEBUG: dicehandler skill=$skill difficulty=$difficulty r=$r\n";
-    if(strlen($diceRoll)<2) $diceRoll = "0$diceRoll";
-    $msg->message = " rolled $diceRoll% of $whatYouRolled and got $r";
-    //$msg->name = "game";  //a special return value that I want to display in a special way
-    message_to_scene($sceneId,$gameId,$msg); //we'll start with this, later a dice-result in proper format
-    $handled = true;
-  }//if
-  
-  if(!$handled) {
-    message_to_scene($sceneId,$gameId,$msg);
-  }//if       
-}//F
-*/
-
 function getLevel($chrName,$ability) {
   global $DBL;
   global $CHARACTERS;
   
-  //echo "DEBUG: getlevel chrName=$chrName ability=$ability\n";
+  //echo "DEBUG:getlevel chrName=$chrName ability=$ability\n";
 
   if( isset($CHARACTERS[$chrName])) {
     $c = $CHARACTERS[$chrName];
@@ -306,10 +259,8 @@ function getLevel($chrName,$ability) {
       //we must retrieve it from the database and store it here
       //echo "find in dB\n";
       $CHARACTERS[ $chrName ]->levels[ $ability ] = getStatValueFromDB($chrName,$ability);
-      
-      //echo "found $row->statValue\n";
-
-      return $row->statValue;
+            
+      return $CHARACTERS[$chrName]->levels[ $ability ];
     }//if found
   } else
     echo "ERROR getLevel: $chrName not found\n";
@@ -376,10 +327,39 @@ function diceHandler($msg,$sceneId,$gameId,$player) { //more complex version - w
   $params = substr($msg->message,5); //clip off "roll "
   $handled = false; 
   
-  //echo "DEBUG: dicehandler params=$params\n"; 
+  echo "DEBUG:dicehandler params=$params\n"; 
   
-  //simple case roll 3 v 7 or we also handle AGL vs 5
   $bits = explode(" ",$params);
+  
+  //handle the case where they roll 5 STR vs 3 //4 bits
+  if(count($bits)==4 && (($bits[2]=="vs")||($bits[2]=="v"))) {
+    // 0:5 1:STR 2:vs 3:4
+    $skill = trim($bits[0]);
+    $difficulty = trim($bits[3]);
+    $statName = strtoupper(trim($bits[1])); 
+    //must resolve skill and difficulty into numbers    
+    $skill2 = computeStatValue($skill,$msg->name,$player);
+    $difficulty2 = computeStatValue($difficulty,$msg->name,$player);
+    $diceRoll = mt_rand(0,99);     
+    $r = round( ($diceRoll * ($skill2 + $difficulty2))/100 - $difficulty2 , 0); //default ROUND UP supposedly
+    if(strlen($diceRoll)<2) $diceRoll = "0$diceRoll";
+    $whatYouRolled = $skill;
+    if($skill<>$skill2)
+      $whatYouRolled .= "($skill2)";
+    $whatYouRolled .= " vs $difficulty";
+    if($difficulty<>$difficulty2)
+      $whatYouRolled .= "($difficulty2)";    
+    //$whatYouRolled = "$skill vs $difficulty";
+    $msg->message = " rolled $diceRoll% of $whatYouRolled and got $r";
+    //$msg->name = "game";  //a special return value that I want to display in a special way
+    message_to_scene($sceneId,$gameId,$msg); //we'll start with this, later a dice-result in proper format
+    //now store that value as the statename
+    $result = setStatValue($statName,$skill2,$player); //return OK if it did
+
+    $handled=true;
+  }//if
+
+  //simple case roll 3 v 7 or we also handle AGL vs 5
   if(count($bits)==3 && ($bits[1]=="vs")||($bits[1]=="v")) {
     $skill = trim($bits[0]);
     $difficulty = trim($bits[2]);
@@ -387,9 +367,25 @@ function diceHandler($msg,$sceneId,$gameId,$player) { //more complex version - w
     //must resolve skill and difficulty into numbers    
     $skill2 = computeStatValue($skill,$msg->name,$player);
     $difficulty2 = computeStatValue($difficulty,$msg->name,$player);
+    if($difficulty2==-1) {
+      $msg->message = "difficulty $difficulty makes no sense";
+      $msg->user = 'Dice';
+      $msg->color = 'white';
+      message_to_player($player,$msg);
+      $handled = true;
+      return;
+    }
+    if($skill2==-1) {
+      $msg->message = "level $skill makes no sense";
+      $msg->user = 'Dice';
+      $msg->color = 'white';
+      message_to_player($player,$msg);
+      $handled = true;
+      return;
+    }
     $diceRoll = mt_rand(0,99);     
     $r = round( ($diceRoll * ($skill2 + $difficulty2))/100 - $difficulty2 , 0); //default ROUND UP supposedly
-    //echo "DEBUG: dicehandler skill=$skill difficulty=$difficulty r=$r\n";
+    //echo "DEBUG:dicehandler skill=$skill difficulty=$difficulty r=$r\n";
     if(strlen($diceRoll)<2) $diceRoll = "0$diceRoll";
     $whatYouRolled = $skill;
     if($skill<>$skill2)
@@ -423,24 +419,31 @@ function computeStatValue($s,$chrName,$player) {//converts an expression into a 
     //each bit will either be a number, or a stat/expression
     $v = getStatValue($b,$chrName,$player);
     echo "bit=$b v=$v "; //DEBUG
-    if($v==-1) return -1; //abort! abort! abort!
+    if($v==-1) {
+      $helpDice = "roll 5 $b vs 3";
+      $msg = mask(json_encode(array('type'=>'usermsg', 'name'=>'Dice', 'message'=>"You have no level for $b please set it by re-typing your roll like this: $helpDice", 'color'=>"white" ))); //playr doesn't have color atm
+      message_to_player($player,$msg); //$line[ $current++ % $SCENE_SIZE ]);
+      return -1; //abort! abort! abort!
+    }//if
     $total += $v;
   }//for
+  echo " DEBUG:\n";
   return $total;
 }//F
 
 function getStatValue($s,$chrName,$player) {
+  if($chrName=="" && isset($player))
+      $chrName = $player->user; //they gave us the information anyway
+
   if(is_numeric($s)) {
     return $s;
   }//numeric
+
   //otherwise, it might be a statname eg Archery
   $stat = getLevel($chrName,$s);
   echo "stat=$stat "; //DEBUG
-  if($stat=="") { //fail
-    $msg = mask(json_encode(array('type'=>'usermsg', 'name'=>$chrName, 'message'=>"You have no level for $skill, please..", 'color'=>"gray" ))); //playr doesn't have color atm
-    message_to_player($player,$msg); //$line[ $current++ % $SCENE_SIZE ]);
+  if($stat=="")
     return -1;
-  }//if
   return $stat;  
 }//F
 function adjustMapParameters($msg,$gameId) {
@@ -462,7 +465,7 @@ WHERE id=$gameId
 LIMIT 1";
   $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
 
-  echo "DEBUG: amp query=$query ";
+  echo "DEBUG:amp query=$query ";
 
   //we need to notify all players to update their maps...
   $game = $GAMES[ $gameId ];
@@ -547,5 +550,53 @@ function isImageLink($msg) {
 
   return true;
 }//F
+
+function setStatValue($statName,$statValue,$player) {
+  global $DBL;
+  global $CHARACTERS;
+
+  if( trim($statName)=="" || trim($statValue)=="" || !isset($player) ) return FALSE;  //signal for fail
+
+  //echo "player="; print_r($player);
+  $chrName = $player->user;
+
+  //need to update database
+  $query = 
+"UPDATE dice_stats 
+SET statValue = $statValue 
+WHERE char_id = ( 
+  SELECT id 
+  FROM dice_characters
+  WHERE name = '$player->user' 
+) AND statName = '$statName'";
+  $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
+
+  echo "DEBUG:ssv query=$query\n";
+
+  echo "DEBUG:ssv FUCK chr for that player ";
+  print_r($CHARACTERS[$player->user]);
+
+  //need to update internal afterwards
+  if( isset($CHARACTERS[$player->user]) ) {
+    $CHARACTERS[$player->user]->levels[ $statName ] = $statValue;
+  }//if
+
+  echo "DEBUG:ssv FUCK chr for that player AFTER ";
+  print_r($CHARACTERS[$player->user]);
+
+  $value = getStatValue($statName,"",$player);  //verify the value is stored
+
+  echo "DEBUG:ssv value from getStatValue=$value when we just set it to $statValue\n";
+
+  if($value != $statValue) {
+    echo "DEBUG:ssv ERROR value was not set in local memory\n";
+  }
+
+  $result_msg = "$player->user $statName set to $statValue";
+  $result_json = mask(json_encode(array('type'=>'usermsg', 'name'=>'Dice', 'message'=>$result_msg, 'color'=>'#FFFFFF')));
+  message_to_player($player,$result_json);
+
+  return TRUE;
+}//F 
 
 ?>
