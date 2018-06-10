@@ -560,6 +560,8 @@ function setStatValue($statName,$statValue,$player) {
   //echo "player="; print_r($player);
   $chrName = $player->user;
 
+  #bullshit comment for git username and password
+
   //need to update database
   $query = 
 "UPDATE dice_stats 
@@ -571,26 +573,26 @@ WHERE char_id = (
 ) AND statName = '$statName'";
   $result = mysqli_query($DBL,$query) or die("failed ".__FILE__."@".__LINE__." $query ".mysql_error());
 
-  echo "DEBUG:ssv query=$query\n";
+  //echo "DEBUG:ssv query=$query\n";
 
-  echo "DEBUG:ssv FUCK chr for that player ";
-  print_r($CHARACTERS[$player->user]);
+  //echo "DEBUG:ssv FUCK chr for that player ";
+  //print_r($CHARACTERS[$player->user]);
 
   //need to update internal afterwards
   if( isset($CHARACTERS[$player->user]) ) {
     $CHARACTERS[$player->user]->levels[ $statName ] = $statValue;
   }//if
 
-  echo "DEBUG:ssv FUCK chr for that player AFTER ";
-  print_r($CHARACTERS[$player->user]);
+  //echo "DEBUG:ssv FUCK chr for that player AFTER ";
+  //print_r($CHARACTERS[$player->user]);
 
   $value = getStatValue($statName,"",$player);  //verify the value is stored
 
-  echo "DEBUG:ssv value from getStatValue=$value when we just set it to $statValue\n";
+  //echo "DEBUG:ssv value from getStatValue=$value when we just set it to $statValue\n";
 
-  if($value != $statValue) {
-    echo "DEBUG:ssv ERROR value was not set in local memory\n";
-  }
+  //if($value != $statValue) {
+    //echo "DEBUG:ssv ERROR value was not set in local memory\n";
+  //}
 
   $result_msg = "$player->user $statName set to $statValue";
   $result_json = mask(json_encode(array('type'=>'usermsg', 'name'=>'Dice', 'message'=>$result_msg, 'color'=>'#FFFFFF')));
