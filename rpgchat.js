@@ -60,6 +60,7 @@ $(document).ready(function(){
 	//#### Message received from server?
 	websocket.onmessage = function(ev) {
 		var msg = JSON.parse(ev.data); //PHP sends Json data
+    var pleaseScroll = false;
 		//var type = msg.type; //message type
 		//var umsg = msg.message; //message text
 		//var uname = msg.name; //user name
@@ -69,15 +70,17 @@ $(document).ready(function(){
 
     //deal with the various returns - HERE
 		if(msg.type == 'usermsg') {
-      if(msg.name != null && msg.message != null)
+      if(msg.name != null && msg.message != null) {
 			//$('#message_box').append("<div><span class=\"user_name\" style=\"color:#"+ucolor+"\">"+uname+" : <span class=\"user_message\">"+umsg+"</span></div>");
         $('#message_box').append("<div><span class=\"user_name\" style=\"color:#"+msg.color+"\">"+msg.name+" <SPAN class=spacer>&nbsp;</SPAN><SPAN class=main-text> "+msg.message+"</span></SPAN></div>");
-      else
+        pleaseScroll = true;
+      } else
         console.error("null message"+msg.name);
 		}
     else
 		if(msg.type == 'system') {
 			$('#message_box').append("<div class=\"system_msg\">"+msg.message+"</div>");    
+      pleaseScroll = true;
     }
     else
     if(msg.type == "sceneupdate") {
@@ -127,12 +130,17 @@ $(document).ready(function(){
       //we need to fill in that select box at the same time      
     } else {
       $('#message_box').append("<div class=\"system_msg\">error: unknown message type - notify your admin</div>");
+      pleaseScroll = true;
     }//if
 		
 		//$('#message').val(''); //reset text - why the hell?
 		
+    //alert("pleaseScroll="+pleaseScroll);
 		var objDiv = document.getElementById("message_box");
-		objDiv.scrollTop = objDiv.scrollHeight;
+		objDiv.scrollTop = objDiv.scrollHeight; //wait is it trying to do it here??
+    if(pleaseScroll)
+      scrollSmoothToBottom("message_box");
+
 	};
 
   //AP attempt to make a click function for scene number
@@ -340,3 +348,14 @@ $(function() {
       hideMap();   
     });
 });
+
+function scrollSmoothToBottom (id) {
+  var div = document.getElementById(id);
+  alert("div=" + div);
+  $('#'+id).scrollTop( div.scrollHeight );
+  //div.scrollTop = div.scrollHeight - div.clientHeight;
+  //$('#' + id).animate({
+    //scrollTop: div.scrollHeight - div.clientHeight
+  //}, 500);
+  //alert("scrollsmooth");
+}

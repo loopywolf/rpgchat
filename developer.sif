@@ -1,14 +1,9 @@
-<H1>LEFT TO DO</H1>
-BUGS
-- Does not scroll down
-- roll 5 STR vs 4 does not work
 IMPROVEMENTS
 - chr creation is very hard
 - Notification icon is imperative (favicon)
 - I can't enter notes! WTF
-Phase 1
-	DONE
-Phase 2
+
+PHASE 2
 - How about put back the 123 thing for GMs. . might be handy
 - solo feature
 -- Solo logs are not viewable by any but the player
@@ -32,12 +27,17 @@ Feedback
 Suggestions
 - see flex.php for a great layout! Implement! - oh right, thanks.. was not.. needs help - maybe Remy? - asked
 
-<H1>BUGS</H1>
+BUGS
+- Does not scroll down
 - Getting a weird bug .. And I don't like it - I won't have any intermittent weird bugs .. Symptom:
 - Log contains blank line entries, shouldn't ever
 - Server stopped responding to a socket.. Mustn't ever
 
-<H1>DONE</H1>
+FIXED BUGS
+- roll 5 STR vs 4 does not work - FIXED
+
+DONE
+- Phase 1
 - GM ability to add xp
 - +1 functionality (xp, luck)
 - Enter new note
